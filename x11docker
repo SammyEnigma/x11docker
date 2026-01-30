@@ -4468,13 +4468,16 @@ locking=false
 background-color=0xff002244
 animation=fade
 startup-animation=fade
-[xwayland]
-path=$Xwaylandwrapper
 [keyboard]
 vt-switching=true" >> "$Westonini"
       # --keymap: keyboard layout
       [ -n "$Xkblayout" ] && echo "keymap_layout=$Xkblayout" >> "$Westonini"
       [ -z "$Xkblayout" ] && [ -n "$Newxvt" ] && echo "$(echo -n "keymap_layout=" && grep XKBLAYOUT <"/etc/default/keyboard" | cut -d= -f2 | cut -d'"' -f2)" >> "$Westonini"
+      # --westonini
+      [ -n "$Customwestonini" ] && unpriv "cp '$Customwestonini' '$Westonini'"
+      echo "
+[xwayland]
+path=$Xwaylandwrapper" >> "$Westonini"
     ;;
   esac
 
@@ -4578,7 +4581,6 @@ $Xwaylandoptions \\
       echo "[output]
 name=${Westonoutput}1
 mode=$Screensize" >> "$Westonini"
-      [ -n "$Customwestonini" ] && Westonini="$Customwestonini"
 
       Compositorcommand="$Weston \\
   --socket=$Newwaylandsocket \\
@@ -4628,7 +4630,6 @@ name=$Connector$Count" >> "$Westonini"
   --output-count=$Outputcount"
       [ "$Xwaylandrootless" = "yes" ] && Compositorcommand="$Compositorcommand \\
   --xwayland"
-      [ -n "$Customwestonini" ] && Westonini="$Customwestonini"
       Compositorcommand="$Compositorcommand \\
   --config='$Westonini'"
     ;;

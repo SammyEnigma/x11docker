@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Project website: https://github.com/mviereck/x11docker
 
 ## [Unreleased]
+### Fixed
+ - `--westonini`: Add Xwayland wrapper to custom weston config.
 ### Added
  - `--xlogo`: Run `xlogo`. Helper for `--clipboard=cmv` like `--xeyes`.
 
