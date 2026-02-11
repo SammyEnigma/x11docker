@@ -9,7 +9,7 @@ report?: --nxagent: -ac -auth bug
 --satellite version check, waiting for release yet
 --weston=X: Do not terminate if Xwayland terminates?
 --xpra firefox: black window on first firefox startup
---runtime=sysbox -xorg --xc fails
+--runtime=sysbox --xorg --xc fails
 --display: Newwaylandnumber
 screen capture in x11docker/check
 profile.d: check for xrdp #554

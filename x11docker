@@ -9423,8 +9423,13 @@ check_host() {                  # check host environment
   case "$Winsubsystem" in
     "")
       case "$Network" in
-        host) Hostip="127.0.0.1" ;;
-        *)    Hostip="$(hostname -I | awk '{print $1}')" ;;
+        host)
+          Hostip="127.0.0.1"
+        ;;
+        *)
+          Hostip="$(ip -4 addr show scope global | awk '/inet / { if ($0 !~ /(docker|br-|veth|cni|podman)/) print $2 }' | head -n1)"
+          Hostip="${Hostip%/*}"
+        ;;
       esac
     ;;
     WSL1|WSL2)
@@ -9438,25 +9443,6 @@ check_host() {                  # check host environment
       [ "$Hostip" ] || Hostip="$(ipconfig.exe | rmcr | grep 'IPv4' | grep -o '10\.0\.[0-9]*\.[0-9]*'          | head -n1 )"
       [ "$Hostip" ] || Hostip="$(ipconfig.exe | rmcr | grep 'IPv4' | grep -o '[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*' | head -n1 )"
     ;;
-#    ""|WSL1)
-#      case "$Network" in
-#        host) Hostip="127.0.0.1" ;;
-#        *)
-#          Hostip="$(hostname -I | awk '{print $1}')"
-#          [ "$Hostip" ] || Hostip="$(ip -4 -o a |                  awk '{print $4}' | cut -d/ -f1 | grep    "^192\.168\.*" | head -n1)"
-#          [ "$Hostip" ] || Hostip="$(ip -4 -o a | grep 'docker0' | awk '{print $4}' | cut -d/ -f1 | grep    "172.17.0.1" ||: )"
-#          [ "$Hostip" ] || Hostip="$(ip -4 -o a | grep 'docker0' | awk '{print $4}' | cut -d/ -f1 | head -n1)"
-#          [ "$Hostip" ] || Hostip="$(ip -4 -o a |                  awk '{print $4}' | cut -d/ -f1 | grep -v "127.0.0.1" | head -n1)"
-#        ;;
-#      esac
-#    ;;
-#    WSL2)
-#      Hostipwindows="$(awk '/nameserver/ {print $2; exit}' /etc/resolv.conf)"
-#      Hostip="$(hostname -I | awk '{print $1}')"
-#      [ "$Hostip" ] || Hostip="$(ip -4 -o a |                  awk '{print $4}' | cut -d/ -f1 | grep    "^192\.168\.*" | head -n1)"
-#      [ "$Hostip" ] || Hostip="$(ip -4 -o a | grep 'docker0' | awk '{print $4}' | cut -d/ -f1 | grep    "172.17.0.1" ||: )"
-#      [ "$Hostip" ] || Hostip="$(ip -4 -o a | grep 'docker0' | awk '{print $4}' | cut -d/ -f1 | head -n1)"
-#      [ "$Hostip" ] || Hostip="$(ip -4 -o a |                  awk '{print $4}' | cut -d/ -f1 | grep -v "127.0.0.1" | head -n1)"    ;;
   esac
   debugnote "check_host(): Host IP: ${Hostip:-'IP not found'}"
   [ -n "$Winsubsystem" ] && {

@@ -9,6 +9,8 @@ Project website: https://github.com/mviereck/x11docker
 ## [Unreleased]
 ### Fixed
  - `--westonini`: Add Xwayland wrapper to custom weston config.
+ - `hostname -I`: replaced with `ip -4` check.
+   [(560)](https://github.com/mviereck/x11docker/issues/560)
 ### Added
  - `--xlogo`: Run `xlogo`. Helper for `--clipboard=cmv` like `--xeyes`.
 
