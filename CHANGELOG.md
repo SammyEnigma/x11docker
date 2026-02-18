@@ -11,6 +11,11 @@ Project website: https://github.com/mviereck/x11docker
  - `--westonini`: Add Xwayland wrapper to custom weston config.
  - `hostname -I`: replaced with `ip -4` check.
    [(560)](https://github.com/mviereck/x11docker/issues/560)
+ - `--xoverip *xwayland`: use `-listen tcp` instead of `socat`.
+   Should have been changed already in a previous release.
+### Changed
+ - `--satellite`: No longer experimental due to release v0.8.1
+   of `xwayland-satellite` supporting several X options.
 ### Added
  - `--xlogo`: Run `xlogo`. Helper for `--clipboard=cmv` like `--xeyes`.
 

@@ -3715,17 +3715,18 @@ check_xdepends() {              # check dependencies on host for X server option
     yes|socat)
       case "${1:-}" in
         --xephyr|--xorg|--nxagent|--xpra|--xpra2|--xvfb|--xwin|--runx) ;;
-        --hostdisplay|--xwayland|--satellite|--weston-xwayland|--kwin-xwayland|--xpra-xwayland|--xpra2-xwayland)
+        --hostdisplay)
           case "$Xcontainer" in
             yes)
               grep -q socat <<< "$Xcontainertools" || {
-                $Message "${1:-} --xoverip needs socat. Please update image x11docker/xserver."
+                $Message "${1:-} --xoverip $Xserver needs socat.
+  Please update image x11docker/xserver."
                 Return=1
               }
             ;;
             no)
               command -v socat >/dev/null || {
-                $Message "${1:-} --xoverip needs socat. socat is not installed.
+                $Message "${1:-} --xoverip $Xserver needs socat. socat is not installed.
   $Wikipackagesimage"
                 Return=1
               }
@@ -3748,7 +3749,7 @@ check_xdepends() {              # check dependencies on host for X server option
     ;;
     listentcp)
       case "${1:-}" in
-        --xephyr|--xorg|--nxagent|--xpra|--xpra2|--xvfb|--xwin|--runx) ;;
+        --xephyr|--xorg|--nxagent|--xpra|--xpra2|--xvfb|--xwin|--runx|--satellite|*xwayland) ;;
         *)
           $Message "${1:-} does not support --xoverip=listentcp."
           Return=1
@@ -4126,6 +4127,22 @@ check_xserver() {               # check chosen X server, auto-choose X server
   # need host Wayland socket
   case "$Xserver" in
     --hostwayland|--xwayland|--satellite) Sharehostwayland="yes" ;;
+  esac
+
+  case "$Xserver" in
+    --satellite)
+      case "$Xcontainer" in
+        yes) Satelliteversion="0.8.1" ;;
+        no)
+          Satelliteversion="$(xwayland-satellite -version | cut -c2-)"
+          verlt "$Satelliteversion" "0.8.1" && warning "Option $Xserver: You have xwayland-satellite
+  version v$Satelliteversion. Please update to at least v0.8.1
+  or provide image x11docker/xserver.
+  Otherwise some setup like cookie authentication
+  or options like --xoverip might fail."
+        ;;
+      esac
+    ;;
   esac
 
   [ "$Autochooseserver" = "yes" ] && note "Using X server option $Xserver"
@@ -4569,8 +4586,11 @@ $Xwaylandoptions \\
     ;;
 
     --satellite)
-#      Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber $Xserveroptions" ###FIXME needs version check
-      Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber"
+      verlt "$Satelliteversion" "0.8.1" && {
+        Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber"
+      } || {
+        Xcommand="$(get_xpath xwayland-satellite) :$Newdisplaynumber $Xserveroptions"
+      }
       store_runoption env "_JAVA_AWT_WM_NONREPARENTING=1"
     ;;
 
@@ -6857,6 +6877,8 @@ create_backendcommand() {       ### create command to run docker|podman|nerdctl 
     docker|podman)
       Backendcommand="$Backendcommand \\
   --security-opt label=type:container_runtime_t"
+#  --security-opt label=type:container_runtime_t"
+#  --security-opt label=disable"
     ;;
   esac
 
@@ -11535,9 +11557,6 @@ check_options_messages() {      # some messages depending on options, but not ch
   Please report issues at https://github.com/mviereck/x11docker"
       [ "$Sharegpu" = "no" ] && note "Option $Xserver: You might need option --gpu."
     ;;
-    --satellite)
-      note "Option $Xserver is experimental yet."
-    ;;
   esac
 
   # NVIDIA without --gpu
@@ -11973,6 +11992,7 @@ declare_variables() {           # declare global variables
   Modeline=""                                     # Screen modeline describing display size, see "man cvt".
   Outputcount="1"                                 # --output-count: quantum of virtual screens for Weston or Xephyr
   Rotation=""                                     # --rotate: Rotation for --weston, --weston-xwayland or --xorg: 0/90/180/270/flipped/flipped-90/..
+  Satelliteversion=""                             # --satellite: version of xwayland-satellite
   Scaling=""                                      # --scale: Scaling factor for xpra and weston
   Screensize=""                                   # --size XxY: Display size
   Setupwayland="no"                               # --wayland, --kwin, --weston --hostwayland: Provide a Wayland environment
@@ -12026,7 +12046,7 @@ declare_variables() {           # declare global variables
   Xcontaineroptionsconsole=""
   Xcontainertools=""
   Xcontainerversion=""
-  Xcontainerversionlatest="2.4"
+  Xcontainerversionlatest="2.6"
   Xcrootless=""
 
   # Window manager
@@ -12313,6 +12333,7 @@ main() {
     finish
     return 0
   }
+  debugnote "x11docker version $Version"
   check_host                     # get some infos about host system
   check_options_arguments        # check for valid arguments
   check_hostuser                 # find unprivileged host user                    # --hostuser
